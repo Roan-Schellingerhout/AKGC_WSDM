@@ -1,14 +1,15 @@
-import tarfile
 import json
 import torch
 import re
 import gc
+import getopt
+import sys
 
 import pandas as pd
 
 from collections import defaultdict
 from tqdm import tqdm
-from transformers import AutoModelForCausalLM, AutoTokenizer, Gemma3nForConditionalGeneration
+from transformers import AutoModelForCausalLM, AutoTokenizer #, Gemma3nForConditionalGeneration
 
 def run_pipeline(model, tokenizer, prompt, text):
     """
@@ -92,16 +93,18 @@ def clean_job_blob(text):
     return text
 
 
-def get_triples(df, model_name, hf, prompt, prompt_type, device="cpu"):
+def get_triples(df, model_name, hf, prompt, prompt_type, start, end, device="cpu"):
     """
     Generates the triples for a single model/prompt combination
     
     :param model_name: the short-hand name of the model; [gemma, qwen, llama]
     :param hf: the huggingface identifier of the model
     :param prompt: the prompt being used
+    :param prompt_type: the prompt type being used (structured, semi-structured, unstructured)
+    :param start: starting index of the current batch
+    :param end: ending index of the current batch
     :param device: cpu/cuda
     """
-
 
     result = defaultdict(list)
 
@@ -117,21 +120,18 @@ def get_triples(df, model_name, hf, prompt, prompt_type, device="cpu"):
             hf,
             dtype="auto"
         ).to(device)
-
-    i = 0
     
-    for row in tqdm(df.itertuples(), total=len(df)):
-        clean_text = clean_job_blob(row[3])
+    for i, row in tqdm(enumerate(df.itertuples()), total=len(df)):
+        # Only run for samples in current range
+        if not (start <= i <= end):
+            continue
 
+        clean_text = clean_job_blob(row[3])
         result["model"].append(model_name)
         result["prompt"].append(prompt_type)
         result["id"].append(row[2])
         result["text"].append(clean_text)    
         result["triples"].append(run_pipeline(model, tokenizer, prompt, clean_text))
-
-        i += 1
-        if i > 4:
-            break
 
     del model
     del tokenizer
@@ -142,7 +142,7 @@ def get_triples(df, model_name, hf, prompt, prompt_type, device="cpu"):
     return result
 
 
-def main():
+def main(start, end):
     texts = defaultdict(list)
 
     with open("../../dataset/final_dataset/jobs.json", 'r') as f:
@@ -181,7 +181,7 @@ def main():
             print(f"  - Prompt type: {prompt_type}")
 
             prompt = listing_prompts[prompt_type]
-            result = get_triples(df, model_name, hf, prompt, prompt_type, device=device)
+            result = get_triples(df, model_name, hf, prompt, prompt_type, start, end, device=device)
 
             results["model"].extend(result["model"])
             results["prompt"].extend(result["prompt"])
@@ -198,7 +198,24 @@ def main():
 
     # Final results
     df_res = pd.DataFrame(results)
-    df_res.to_excel(f"../outputs/raw_outputs/generated_triples.xlsx")
+    df_res.to_excel(f"../outputs/raw_outputs/generated_triples_test_{start}_{end}.xlsx")
 
 if __name__ == "__main__":
-    main()
+
+    args = sys.argv[1:]
+    options = "s:e:"
+    long_options = ["start=", "end="]
+
+    try:
+        arguments, values = getopt.getopt(args, options, long_options)
+        for currentArg, currentVal in arguments:
+            if currentArg in ("-s", "--start"):
+                start = int(currentVal)
+            elif currentArg in ("-e", "--end"):
+                end = int(currentVal)
+    except getopt.error as err:
+        print(str(err))
+
+    print(f"Running for index {start} until {end}")
+
+    main(start, end)
