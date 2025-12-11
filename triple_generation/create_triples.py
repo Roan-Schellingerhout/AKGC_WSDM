@@ -133,6 +133,9 @@ def get_triples(df, model_name, hf, prompt, prompt_type, start, end, device="cpu
         result["text"].append(clean_text)    
         result["triples"].append(run_pipeline(model, tokenizer, prompt, clean_text))
 
+        with open(f"./temporary_results_{model_name}_{prompt_type}.txt") as f:
+            f.write(json.dumps(result) + '\n')
+
     del model
     del tokenizer
     torch.cuda.empty_cache() 
