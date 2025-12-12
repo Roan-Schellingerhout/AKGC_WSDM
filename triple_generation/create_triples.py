@@ -133,7 +133,7 @@ def get_triples(df, model_name, hf, prompt, prompt_type, start, end, device="cpu
         result["text"].append(clean_text)    
         result["triples"].append(run_pipeline(model, tokenizer, prompt, clean_text))
 
-        with open(f"./temporary_results_{model_name}_{prompt_type}.txt") as f:
+        with open(f"./temporary_results_{model_name}_{prompt_type}.txt", "w+") as f:
             f.write(json.dumps(result) + '\n')
 
     del model
@@ -175,6 +175,7 @@ def main(start, end):
     device = ("cuda:0" if torch.cuda.is_available() else "cpu")
 
     print(f"Running from: {device}")
+    print(f"Using GPU: {torch.cuda.get_device_name(0)}")
 
     # Start the loop
     for model_name, hf in models.items():
