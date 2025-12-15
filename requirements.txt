@@ -1,4 +1,4 @@
-faiss==1.5.3
+faiss-cpu==1.13.1
 kglab==0.7.0
 matplotlib==3.10.7
 networkx==3.5
@@ -7,6 +7,5 @@ pandas==2.3.3
 rdflib==7.5.0
 scikit_learn==1.7.2
 sentence_transformers==5.1.2
-torch==2.5.1+cu121
 tqdm==4.67.1
 transformers==4.57.3
