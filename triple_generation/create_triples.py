@@ -120,16 +120,24 @@ def get_triples(df, model_name, hf, prompt, prompt_type, start, end, device="cpu
             hf,
             dtype="auto"
         ).to(device)
+
+    # Open and load the todo file
+    with open("todo.json", "r", encoding="utf-8") as f:
+        todo = json.load(f)
     
     for i, row in tqdm(enumerate(df.itertuples()), total=len(df)):
         # Only run for samples in current range
         if not (start <= i <= end):
             continue
 
+        # Indices that have already been completed in a previous run should be skipped
+        if not i in todo[model_name][prompt_type]:
+            continue
+
         clean_text = clean_job_blob(row[3])
         result["model"].append(model_name)
         result["prompt"].append(prompt_type)
-        result["id"].append(row[2])
+        result["id"].append(row[1])
         result["text"].append(clean_text)    
         result["triples"].append(run_pipeline(model, tokenizer, prompt, clean_text))
 
