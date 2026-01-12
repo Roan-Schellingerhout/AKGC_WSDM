@@ -9,7 +9,7 @@ import pandas as pd
 
 from collections import defaultdict
 from tqdm import tqdm
-from transformers import AutoModelForCausalLM, AutoTokenizer #, Gemma3nForConditionalGeneration
+from transformers import AutoModelForCausalLM, AutoTokenizer, Gemma3nForConditionalGeneration
 
 def run_pipeline(model, tokenizer, prompt, text):
     """
@@ -141,7 +141,7 @@ def get_triples(df, model_name, hf, prompt, prompt_type, start, end, device="cpu
         result["text"].append(clean_text)    
         result["triples"].append(run_pipeline(model, tokenizer, prompt, clean_text))
 
-        with open(f"./temporary_results_{model_name}_{prompt_type}.txt", "w+") as f:
+        with open(f"./logs/temporary_results_{model_name}_{prompt_type}_{start}_{end}.txt", "w+") as f:
             f.write(json.dumps(result) + '\n')
 
     del model
@@ -217,6 +217,9 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     options = "s:e:"
     long_options = ["start=", "end="]
+
+    start = 0
+    end = 10585
 
     try:
         arguments, values = getopt.getopt(args, options, long_options)
