@@ -8,6 +8,7 @@ logs/
 # Specific pipeline checkpoint and model folders
 pipeline/dajobbert-checkpoints/
 pipeline/dajobbert-kg-specialized/
+pipeline/opus_da_en_ct2/
 
 # Pattern-matched logs within triple_generation
 triple_generation/logs_*/
