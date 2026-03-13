@@ -3,7 +3,7 @@ import json
 
 import pandas as pd
 
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 tqdm.pandas()
 
 from sentence_transformers import SentenceTransformer
@@ -121,7 +121,7 @@ def main():
                 lambda emb: find_matches(emb, esco_ids, esco_matrix_norm, k=20)
             )
     
-    triples["id", "text", "job title", "text", 
+    triples[["id", "text", "job title", "text", 
             "triples_qwen_structured", "triples_qwen_semi-structured", "triples_qwen_unstructured", 
             "triples_gemma_structured", "triples_gemma_semi-structured", "triples_gemma_unstructured", 
             "triples_llama_structured", "triples_llama_semi-structured", "triples_llama_unstructured",
@@ -131,7 +131,7 @@ def main():
             "triples_qwen_structured_top_matches_isco", "triples_qwen_semi-structured_top_matches_isco", "triples_qwen_unstructured_top_matches_isco", 
             "triples_gemma_structured_top_matches_isco", "triples_gemma_semi-structured_top_matches_isco", "triples_gemma_unstructured_top_matches_isco", 
             "triples_llama_structured_top_matches_isco", "triples_llama_semi-structured_top_matches_isco", "triples_llama_unstructured_top_matches_isco", 
-            ].to_excel("../outputs/clean_outputs/triples_ISCO_ESCO_matches.xlsx")
+            ]].to_excel("../outputs/clean_outputs/triples_ISCO_ESCO_matches.xlsx")
 
 if __name__ == "__main__":
     main()

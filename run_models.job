@@ -1,0 +1,69 @@
+#!/bin/bash
+
+# --- SLURM Directives ---
+# Job Array setup for 4 distinct tasks (index 1 to 4)
+# We will use this index to select the correct parameters.
+#SBATCH --job-name=triple_sweep
+#SBATCH --array=1-4              # Run 4 separate tasks (indices 1, 2, 3, 4)
+#SBATCH --output=logs/triple_sweep_%A_%a.out  # %A=JobID, %a=TaskID
+#SBATCH --error=logs/triple_sweep_%A_%a.err
+
+# Resource Allocation (MUST BE CHANGED TO YOUR GPU PARTITION)
+# Find your GPU partition name (e.g., 'gpu', 'a100', 'v100')
+#SBATCH --partition=acltr        # Run on GPU queue
+#SBATCH --nodes=1                # Each task runs on a single node
+#SBATCH --ntasks=1               # Each task is a single process
+#SBATCH --cpus-per-task=1        # Request 1 CPU cores per task
+#SBATCH --mem=32G                # Request 32GB of memory
+#SBATCH --gres=gpu:1             # Request 1 GPU for each task (Job Array Task)
+#SBATCH --time=72:00:00          # Max run time
+
+# --- Change Directory ---
+# Navigate to the project folder before doing anything else
+echo "Changing directory to: /home/roasch/AKGC_recsys/triple_generation"
+cd /home/roasch/AKGC_recsys/triple_generation
+
+# Create the logs directory if it doesn't exist (assuming logs will be inside this folder)
+mkdir -p logs
+
+module load CUDA/12.1.1
+module load NCCL/2.18.3-GCCcore-12.3.0-CUDA-12.1.1
+
+# --- Setup Environment ---
+
+# 1. Robust Conda Activation
+source /opt/itu/easybuild/software/Anaconda3/2024.02-1/etc/profile.d/conda.sh
+conda activate hf
+echo "Conda environment 'hf' activated."
+
+# 2. Hugging Face Authentication
+# IMPORTANT: Replace 'YOUR_HUGGINGFACE_TOKEN' with your actual token.
+export HF_TOKEN="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"
+echo "Hugging Face Token is set."
+
+# --- Parameter Selection ---
+
+# Define the full command for each task index
+case $SLURM_ARRAY_TASK_ID in
+    1) ARGS="--start 1";;         # The final task has no --end parameter
+    *) 
+       echo "Error: SLURM_ARRAY_TASK_ID $SLURM_ARRAY_TASK_ID is out of range (1-4)."
+       exit 1
+       ;;
+esac
+
+echo "--- Task $SLURM_ARRAY_TASK_ID Running ---"
+echo "Arguments: $ARGS"
+echo "Running on node: $(hostname)"
+
+# --- Execution ---
+
+# Run the Python script with the selected arguments
+# The '-u' flag ensures unbuffered output for better real-time monitoring.
+python3 -u create_triples.py $ARGS
+
+# Clean up environment variable (optional but good practice)
+unset HF_TOKEN
+conda deactivate
+
+echo "--- Task $SLURM_ARRAY_TASK_ID Finished ---"

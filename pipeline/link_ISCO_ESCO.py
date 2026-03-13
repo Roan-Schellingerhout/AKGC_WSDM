@@ -7,7 +7,7 @@ import time
 
 import pandas as pd
 
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 from collections import defaultdict
 from transformers import AutoModelForCausalLM, AutoTokenizer
 tqdm.pandas()
@@ -20,14 +20,19 @@ def run_pipeline(model, tokenizer, r_isco, r_esco, row, model_name, prompt_type)
     matches = {_id: r_isco[str(_id)] for _id in eval(row[f"triples_{model_name}_{prompt_type}_top_matches_isco"])}
     prompt1 = f"""
     Link the subjects and objects in these triples to their respective ISCO-08 codes (where applicable).
-    A link takes the shape: (*subject/object*, has_isco, ISCO_XXXX) with XXXX replaced by the appropriate 4-digit code.
-    Ensure that it matches this shape exactly. Only ever use has_isco as the predicate.
+    A link takes the shape: (*subject/object*, has_isco, ISCO_XXXX) with XXXX replaced by the appropriate 5-digit code.
+    Ensure that it matches this shape exactly. Only ever use has_isco as the predicate. It is your job to return the 
+    triples themselves directly. Never return instructions or code on how those triples could be generated; YOU need
+    to generate the relevant ISCO-triples and return those; nothing else. Do not use code for that, but reason over
+    which links make sense yourself. 
 
     You are given 20 possible ISCO codes and their definitions. When returning a triple, ensure you only use the code,
     not the definition. Precisely, you need to evaluate the triples you are provided, determine which ones match ISCO
     codes, and then return new triples containing the subject/object of the triples, has_isco, and then the ISCO code
     that matches it. If none of the triples match an isco definition, it is okay to return an empty list. Therefore,
-    choose quality over quantity when it comes to matches. No match is better than a farfetched one. 
+    choose quality over quantity when it comes to matches. No match is better than a farfetched one. ONLY INCLUDE
+    TRIPLES ABOUT THE ISCO CODE (i.e., the ones using has_isco and an ISCO code). NOTHING ELSE. NO OTHER RELATIONS. 
+    ONLY ISCO. 
     
     Pick from the following ISCO codes/definitions:
     {matches}
@@ -40,18 +45,22 @@ def run_pipeline(model, tokenizer, r_isco, r_esco, row, model_name, prompt_type)
     """
 
     matches2 = {_id: r_esco[f"{_id:06}"] for _id in eval(row[f"triples_{model_name}_{prompt_type}_top_matches_esco"])}
-        
+
     prompt2 = f"""
     Link the subjects and objects in these triples to their respective ESCO skill codes (where applicable).
     A link takes the shape: (*skill/knowledge*, has_esco, ESCO_*code*) with *skill/knowledge* being replace by the 
     appropriate node and *code* replaced by the appropriate code. Only ever use has_esco as the predicate.
-    Ensure that it matches this shape exactly. 
+    Ensure that it matches this shape exactly. It is your job to return the triples themselves directly. Never return 
+    instructions or code on how those triples could be generated; YOU need to generate the relevant ESCO-triples and
+    return those; nothing else. Do not use code for that, but reason over which links make sense yourself. 
 
     You are given 20 possible ESCO codes and their definitions. When returning a triple, ensure you only use the code,
     not the definition. Precisely, you need to evaluate the triples you are provided, determine which ones match ESCO
     codes, and then return new triples containing the subject/object of the triples, has_isco, and then the ESCO code
     that matches it. If none of the triples match an esco definition, it is okay to return an empty list. Therefore,
-    choose quality over quantity when it comes to matches. No match is better than a farfetched one. 
+    choose quality over quantity when it comes to matches. No match is better than a farfetched one. ONLY INCLUDE
+    TRIPLES ABOUT THE ESCO CODES (i.e., ones using has_esco and and ESCO code). NOTHING ELSE. NO OTHER RELATIONS. 
+    ONLY ESCO. 
     
     Pick from the following ESCO codes/definitions:
     {matches2}
@@ -84,11 +93,12 @@ def run_pipeline(model, tokenizer, r_isco, r_esco, row, model_name, prompt_type)
         # Tokenize
         model_inputs = tokenizer([processed_text], return_tensors="pt").to(model.device)
     
-        # conduct text completion
-        generated_ids = model.generate(
-            **model_inputs,
-            max_new_tokens=4096 # 16384
-        )
+        with torch.inference_mode():
+            # conduct text completion
+            generated_ids = model.generate(
+                **model_inputs,
+                max_new_tokens=4096 # 16384
+            )
     
         output_ids = generated_ids[0][len(model_inputs.input_ids[0]):].tolist()
 
@@ -116,9 +126,11 @@ def main(start, end, cur_time):
 
     with open("esco_defs.json", "r") as f:
         r_esco = json.load(f)
-    
 
-    for model_name, hf in models.items():   
+    with open("todo_ISCO.json", "r") as f:
+        todo = json.load(f)
+
+    for model_name, hf in models.items():
         print(f"Loading model: {model_name}")
         # load the tokenizer and the model
         tokenizer = AutoTokenizer.from_pretrained(hf)
@@ -133,6 +145,9 @@ def main(start, end, cur_time):
             final_results = defaultdict(list)
 
             for row in tqdm(triples.iterrows(), total=len(triples)):
+                
+                if not row[0] in todo[model_name][prompt]:
+                    continue
 
                 if start < row[0] < end:
                     model_output = run_pipeline(model, tokenizer, r_isco, r_esco, row[1], model_name, prompt)
@@ -142,20 +157,20 @@ def main(start, end, cur_time):
                     final_results["ISCO"].append(model_output["isco"])
                     final_results["ESCO"].append(model_output["esco"])
 
-                with open(f"./logs_isco_esco/temporary_results_{model_name}_{prompt}_{start}_{end}_{cur_time}.json", "w+") as f:
-                    f.write(json.dumps(final_results) + '\n')
-            
-            del model
-            del tokenizer
-            torch.cuda.empty_cache() 
-            torch.cuda.ipc_collect()
-            gc.collect()
+                    with open(f"./logs_isco_esco/temporary_results_{model_name}_{prompt}_{start}_{end}_{cur_time}.json", "w+") as f:
+                       f.write(json.dumps(final_results) + '\n')
+           
+        del model
+        del tokenizer
+        torch.cuda.empty_cache() 
+        torch.cuda.ipc_collect()
+        gc.collect()
 
-            triples[f"esco_edges_{model_name}_{prompt}"] = final_results["ESCO"]
-            triples[f"isco_edges_{model_name}_{prompt}"] = final_results["ISCO"]
+        # triples.loc[start:end - 1, f"esco_edges_{model_name}_{prompt}"] = final_results["ESCO"]
+        # triples.loc[start:end - 1, f"isco_edges_{model_name}_{prompt}"] = final_results["ISCO"]
             
     
-    triples.to_excel("triples_with_ESCO_ISCO_edges.xlsx")
+    # triples.to_excel(f"triples_with_ESCO_ISCO_edges_{int(time.time())}.xlsx")
 
 if __name__ == "__main__":
 

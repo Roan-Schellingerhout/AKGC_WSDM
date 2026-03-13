@@ -6,7 +6,7 @@ import random
 import pandas as pd
 import numpy as np
 
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 from sentence_transformers import SentenceTransformer, losses, models, SentenceTransformerTrainer, SentenceTransformerTrainingArguments
 from sentence_transformers.trainer import SentenceTransformerTrainer
 from sentence_transformers.training_args import SentenceTransformerTrainingArguments

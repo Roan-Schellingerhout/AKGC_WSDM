@@ -2,6 +2,16 @@
 *.JOB
 *.json
 
+# General logs folder
+logs/
+
+# Specific pipeline checkpoint and model folders
+pipeline/dajobbert-checkpoints/
+pipeline/dajobbert-kg-specialized/
+
+# Pattern-matched logs within triple_generation
+triple_generation/logs_*/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
