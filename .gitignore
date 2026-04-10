@@ -1,6 +1,7 @@
 *.edgelist
 *.JOB
 *.json
+*.rdf
 
 # General logs folder
 logs/
