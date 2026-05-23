@@ -1,0 +1,1 @@
+{"learning_rate": 0.0003234946437932892, "embedding_size": 32, "pooling_method": "sum", "heads": 2}

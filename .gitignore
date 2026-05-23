@@ -2,9 +2,17 @@
 *.JOB
 *.json
 *.rdf
+*.parquet
+*.pth
+*.bin
+*.spm
+*.pkl
+*.ttl
 
 # General logs folder
 logs/
+kg_consutrction/temp_esco_store
+
 
 # Specific pipeline checkpoint and model folders
 pipeline/dajobbert-checkpoints/
