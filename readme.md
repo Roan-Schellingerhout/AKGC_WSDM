@@ -2,13 +2,13 @@
 ## By Roan Schellingerhout, Mesut Kaya, Toine Bogers, Francesco Barile, and Nava Tintarev
 
 ### Structure
-`/dataloaders`: contains the .pth dataloaders
-`/fairness`: contains the fairness evaluation code for all models
-`/kg_construction`: contains all the code related to building the full knowledge graph and the candidate-vacancy sub-graphs
-`/outputs`: location of all model outputs (all triples)
-`/pipeline`: contains the code to perform all the additional steps on triples (bridges, entity resolution, taxonomy linking, etc.)
-`/recommendation`: contains the code required for recommendation - dataloader creation and actual models
-`/triple_generation`: contains the code to prompt the LLMs to generate triples from the source texts
+`/dataloaders`: contains the .pth dataloaders  
+`/fairness`: contains the fairness evaluation code for all models  
+`/kg_construction`: contains all the code related to building the full knowledge graph and the candidate-vacancy sub-graphs  
+`/outputs`: location of all model outputs (all triples)  
+`/pipeline`: contains the code to perform all the additional steps on triples (bridges, entity resolution, taxonomy linking, etc.)  
+`/recommendation`: contains the code required for recommendation - dataloader creation and actual models  
+`/triple_generation`: contains the code to prompt the LLMs to generate triples from the source texts  
 
 ## Graph overview without bridges
 
