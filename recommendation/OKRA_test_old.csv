@@ -1,0 +1,19 @@
+,model,prompt,inference,isco,nDCG@10 (test)
+0,qwen,structured,TRUE,TRUE,0.902686877
+1,qwen,semi-structured,TRUE,TRUE,0.805680895
+2,qwen,unstructured,TRUE,TRUE,0.845257291
+3,gemma,structured,TRUE,TRUE,0.86806061
+4,gemma,semi-structured,TRUE,TRUE,0.877797761
+5,gemma,unstructured,TRUE,TRUE,0.826851906
+6,llama,structured,TRUE,TRUE,0.845918162
+7,llama,semi-structured,TRUE,TRUE,0.880212939
+8,llama,unstructured,TRUE,TRUE,0.896368049
+9,qwen,structured,TRUE,FALSE,0.861954377
+10,qwen,semi-structured,TRUE,FALSE,0.857212497
+11,qwen,unstructured,TRUE,FALSE,0.859331981
+12,gemma,structured,TRUE,FALSE,0.859624389
+13,gemma,semi-structured,TRUE,FALSE,0.872586194
+14,gemma,unstructured,TRUE,FALSE,0.873597714
+15,llama,structured,TRUE,FALSE,0.868417907
+16,llama,semi-structured,TRUE,FALSE,0.855739852
+17,llama,unstructured,TRUE,FALSE,0.867915086
