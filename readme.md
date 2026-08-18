@@ -1,6 +1,9 @@
 # Automated Knowledge Graph Construction for Fair Job Recommendation
 ## By Roan Schellingerhout, Mesut Kaya, Toine Bogers, Francesco Barile, and Nava Tintarev
 
+### Pipeline overview
+![A visualization of the AKGC pipeline](https://github.com/Roan-Schellingerhout/AKGC_WSDM/blob/main/AKGC_pipeline.png?raw=true)
+
 ### Structure
 `/dataloaders`: contains the .pth dataloaders  
 `/fairness`: contains the fairness evaluation code for all models  
